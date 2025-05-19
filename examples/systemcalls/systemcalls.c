@@ -16,7 +16,13 @@ bool do_system(const char *cmd)
  *   and return a boolean true if the system() call completed with success
  *   or false() if it returned a failure
 */
-
+    int status = system(cmd);
+    // Check if theres error
+    if (status < 0)
+    {
+        return false;
+    }
+    
     return true;
 }
 
@@ -58,9 +64,47 @@ bool do_exec(int count, ...)
  *   as second argument to the execv() command.
  *
 */
+    pid_t pid = fork();
 
-    va_end(args);
+    if (pid == -1)
+    {
+        // error to create child process
+        va_end(args);
+        return false;
+        
+    }else if (pid == 0)
+    {
+        // CHild process run system
+        
+        int error = execv(command[0], command);
+        if (error == -1)
+        {
+            // Send status to wait
+            exit(-1);
+        }
+        if(errno)
+        {
+            exit(-1);
+        }
+        
 
+    }else{
+        int status;
+        pid_t checkPid = waitpid(pid, &status, 0);
+
+        va_end(args);
+
+        if (checkPid == -1)
+        {
+            return false;
+        }
+        if (WIFEXITED(status)){
+            if (status != 0) {
+                return false;
+            }
+        }
+        
+    }    
     return true;
 }
 
@@ -92,8 +136,69 @@ bool do_exec_redirect(const char *outputfile, int count, ...)
  *   The rest of the behaviour is same as do_exec()
  *
 */
+    int fd = open(outputfile, O_RDWR | O_CREAT, 00644);
+    if (fd < 0)
+    {
+        perror("open");
+        return false;
+    }
+    
 
-    va_end(args);
+    if (dup2(fd, 1) == -1) {
+        close(fd);
+        va_end(args);
+        return false;
+    }
 
-    return true;
+    if (dup2(fd, 2) == -1) {
+        close(fd);
+        va_end(args);
+        return false;
+    }
+    
+    pid_t pid = fork();
+
+    if (pid == -1)
+    {
+        // error to create child process
+        va_end(args);
+        return false;
+        
+    }else if (pid == 0){
+        // CHild process run system
+        
+        execv(command[0], command);
+        va_end(args);
+        return false;
+
+        int error = execv(command[0], command);
+        if (error == -1)
+        {
+            // Send status to wait
+            exit(-1);
+        }
+        if(errno)
+        {
+            exit(-1);
+        }
+
+    }else{
+        int status;
+        pid_t checkPid = waitpid(pid, &status, 0);
+
+        va_end(args);
+
+        if (checkPid == -1)
+        {
+            return false;
+        }
+        if (WIFEXITED(status)){
+            if (status != 0) {
+                close(fd);
+                return false;
+            }
+        }
+        close(fd);
+    }    
+    return true;    
 }
