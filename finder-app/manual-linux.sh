@@ -41,9 +41,9 @@ if [ ! -e ${OUTDIR}/linux-stable/arch/${ARCH}/boot/Image ]; then
     export CROSS_COMPILE=${CROSS_COMPILE}
 
     # Set Default configuration
-    #make defconfig
+    make defconfig
     # Make allnoconfig for minimal configuration
-    make allnoconfig
+    #make allnoconfig
     set -u
 
     NPROC="$(nproc)"
