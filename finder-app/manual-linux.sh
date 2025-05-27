@@ -11,8 +11,8 @@ KERNEL_VERSION=v5.15.163
 BUSYBOX_VERSION=1_33_1
 FINDER_APP_DIR=$(realpath $(dirname $0))
 ARCH=arm64
-CROSS_COMPILE=aarch64-linux-gnu-
-CROSS_SYSROOT=/usr/aarch64-linux-gnu/
+CROSS_COMPILE=aarch64-none-linux-gnu-
+CROSS_SYSROOT=$(${CROSS_COMPILE}gcc -print-sysroot)
 
 if [ $# -lt 1 ]
 then
@@ -120,7 +120,7 @@ for lib in $libs; do
         echo "Error Missing: $lib"
     else
         echo "Copying $lib from $libpath"
-        cp "$libpath" "${OUTDIR}/rootfs/lib/"
+        cp "$libpath" "${OUTDIR}/rootfs/lib64/"
     fi
 done
 
