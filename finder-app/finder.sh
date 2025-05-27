@@ -1,29 +1,26 @@
-#!/bin/bash
-
-# Script Finder to find word in directory
+#!/bin/sh
+# Script: Finder
+# Description: Search for a word recursively in files under a directory
 # Author: Ridha Noomane
-
-if [ $# -eq 2 ]; then
-    filesdir=$1
-    searchstr=$2
-
-    if [[ -e "${filesdir}" ]]; then
-        filenum=0
-        findnum=0
-        IFS=':'
-        
-        while read -r line; do
-            filenum=$((filenum + 1))
-            read -ra newarr <<< "$line"
-            findnum=$((findnum + ${newarr[-1]}))
-            # echo ${newarr[-1]}
-        done <<< $(grep -rc ${filesdir} -e ${searchstr})
-        echo "The number of files are ${filenum} and the number of matching lines are ${findnum}"
-    else
-        echo "${filesdir} not exist, Please specify correct directory"
-        exit 1
-    fi
-else
-    echo "Please enter 2 arguments file dir and Search String"
-    exit 1
+if [ "$#" -ne 2 ]; then
+   echo "Usage: $0 <directory> <search_string>"
+   exit 1
 fi
+filesdir=$1
+searchstr=$2
+if [ ! -d "$filesdir" ]; then
+   echo "Error: '$filesdir' is not a valid directory"
+   exit 1
+fi
+# Initialize counters
+filenum=0
+match_count=0
+# Loop over all regular files
+for file in $(find "$filesdir" -type f); do
+   count=$(grep -o "$searchstr" "$file" 2>/dev/null | wc -l)
+   if [ "$count" -gt 0 ]; then
+       match_count=$((match_count + count))
+       filenum=$((filenum + 1))
+   fi
+done
+echo "The number of files are ${filenum} and the number of matching lines are ${match_count}"
